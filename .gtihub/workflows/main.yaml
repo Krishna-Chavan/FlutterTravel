@@ -1,0 +1,40 @@
+name: Build APK
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Install Flutter
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git curl unzip xz-utils openjdk-11-jdk
+          git clone https://github.com/flutter/flutter.git -b stable --depth 1
+          echo "${GITHUB_WORKSPACE}/flutter/bin" >> $GITHUB_PATH
+
+      - name: Accept Android Licenses
+        run: yes | flutter doctor --android-licenses
+
+      - name: Run Flutter Doctor
+        run: flutter doctor
+
+      - name: Clean Project
+        run: flutter clean
+
+      - name: Build APK with verbose output
+        run: |
+          flutter pub get
+          flutter build apk --release --verbose
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v2
+        with:
+          name: app-release.apk
+          path: build/app/outputs/flutter-apk/app-release.apk
